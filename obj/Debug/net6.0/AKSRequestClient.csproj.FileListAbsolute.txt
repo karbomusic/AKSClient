@@ -1,0 +1,15 @@
+C:\Users\User\source\repos\AKSRequestClient\bin\Debug\net6.0\AKSRequestClient.exe
+C:\Users\User\source\repos\AKSRequestClient\bin\Debug\net6.0\AKSRequestClient.deps.json
+C:\Users\User\source\repos\AKSRequestClient\bin\Debug\net6.0\AKSRequestClient.runtimeconfig.json
+C:\Users\User\source\repos\AKSRequestClient\bin\Debug\net6.0\AKSRequestClient.dll
+C:\Users\User\source\repos\AKSRequestClient\bin\Debug\net6.0\ref\AKSRequestClient.dll
+C:\Users\User\source\repos\AKSRequestClient\bin\Debug\net6.0\AKSRequestClient.pdb
+C:\Users\User\source\repos\AKSRequestClient\obj\Debug\net6.0\AKSRequestClient.csproj.AssemblyReference.cache
+C:\Users\User\source\repos\AKSRequestClient\obj\Debug\net6.0\AKSRequestClient.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\User\source\repos\AKSRequestClient\obj\Debug\net6.0\AKSRequestClient.AssemblyInfoInputs.cache
+C:\Users\User\source\repos\AKSRequestClient\obj\Debug\net6.0\AKSRequestClient.AssemblyInfo.cs
+C:\Users\User\source\repos\AKSRequestClient\obj\Debug\net6.0\AKSRequestClient.csproj.CoreCompileInputs.cache
+C:\Users\User\source\repos\AKSRequestClient\obj\Debug\net6.0\AKSRequestClient.dll
+C:\Users\User\source\repos\AKSRequestClient\obj\Debug\net6.0\ref\AKSRequestClient.dll
+C:\Users\User\source\repos\AKSRequestClient\obj\Debug\net6.0\AKSRequestClient.pdb
+C:\Users\User\source\repos\AKSRequestClient\obj\Debug\net6.0\AKSRequestClient.genruntimeconfig.cache
