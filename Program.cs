@@ -7,21 +7,29 @@ namespace AKSTest // Note: actual namespace depends on the project name.
     internal class Program
     {
         static HttpClient? client;
-        static String testURL= String.Empty;
+        static String testURL = String.Empty;
         static int numTests = 100;
         static int delay = 1000;
         static String logFilePath = "AKSTestLog-" + DateTime.Now.Ticks + ".log";
         static object logLock = new object();
+        static bool useLegacyThreading = true;
 
         static void Main(string[] args)
         {
-           PrintBanner();
+            PrintBanner();
 
             if (args.Count() > 0)
             {
                 testURL = args[0];
                 numTests = Convert.ToInt32(args[1]);
                 delay = Convert.ToInt32(args[2]);
+                if (args.Count() > 3)
+                {
+                    if (args[3] == "0")
+                    {
+                       useLegacyThreading = false;
+                    }
+                }
             }
             else
             {
@@ -29,34 +37,48 @@ namespace AKSTest // Note: actual namespace depends on the project name.
             }
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("\r\nStarting test: URL{0}\r\nPassess={1}\r\nTotal Requests={2}\r\nDelay={3}", testURL, numTests, numTests*numTests, delay);
+            Console.WriteLine("\r\nStarting test: URL{0}\r\nPassess={1}\r\nTotal Requests={2}\r\nDelay={3}", testURL, numTests, numTests * numTests, delay);
             Console.ForegroundColor = ConsoleColor.Gray;
-            RunConnectivityTest2(testURL, numTests, delay*1000);
+            if (useLegacyThreading)
+            {
+                RunConnectivityTest2(testURL, numTests, delay * 1000);
+            }
+            else
+            {
+                RunConnectivityTest(testURL, numTests, delay * 1000);
+            }
+
             Console.ReadKey();
         }
 
         // Make i iterations of r requests so numPasses = 10 = 10 passes (i) of 10 request blocks (r) each = 100 requests
         static async void RunConnectivityTest(string URL, int numPasses, int waitDelay)
-        { 
-            for(int i=0; i< numPasses; i++)
+        {
+            for (int i = 0; i < numPasses; i++)
             {
                 for (int r = 0; r < numPasses; r++)
                 {
                     try
                     {
                         client = new HttpClient();
-                        var result =  await client.GetAsync(URL);
+                        var result = await client.GetAsync(URL);
                         Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, DateTime.Now.ToString("MM/dd/yy hh:mm:ss.fffffff tt"), result.StatusCode);
-                        AppendLog(i + " " + DateTime.Now.ToLongTimeString() + ": " + result.StatusCode + "\r\n");
+                        lock (logLock)
+                        {
+                            AppendLog(i + " " + DateTime.Now.ToLongTimeString() + ": " + result.StatusCode + "\r\n");
+                        }
                         if (client != null)
                         {
                             client.Dispose();
                         }
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, DateTime.Now.ToString("MM/dd/yy hh: mm:ss.fffffff tt"), "ERROR: " + ex.Message);
-                        AppendLog(i + " " + DateTime.Now.ToString("MM/dd/yy hh:mm:ss.fffffff tt") + ": " + "ERROR: " + ex.Message + "\r\n");
+                        lock (logLock)
+                        {
+                            AppendLog(i + " " + DateTime.Now.ToString("MM/dd/yy hh:mm:ss.fffffff tt") + ": " + "ERROR: " + ex.Message + "\r\n");
+                        }
                     }
 
                     System.Threading.Thread.Sleep(200);
@@ -74,7 +96,7 @@ namespace AKSTest // Note: actual namespace depends on the project name.
                 {
                     Thread t = new Thread(() => MakeRequest(URL, numPasses, waitDelay, i, r));
                     t.Start();
-                    System.Threading.Thread.Sleep(100);
+                    System.Threading.Thread.Sleep(50);
                 }
                 System.Threading.Thread.Sleep(waitDelay);
             }
@@ -89,7 +111,7 @@ namespace AKSTest // Note: actual namespace depends on the project name.
                 Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, GetTimeStamp(), result.Result.StatusCode);
                 lock (logLock)
                 {
-                    AppendLog(i + " " + GetTimeStamp() + ": " + result.Result.StatusCode + "\r\n");
+                    AppendLog(i + "/" + r + " " + GetTimeStamp() + ": " + result.Result.StatusCode + "\r\n");
                 }
                 if (client != null)
                 {
@@ -101,7 +123,7 @@ namespace AKSTest // Note: actual namespace depends on the project name.
                 Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, GetTimeStamp(), "ERROR: " + ex.Message);
                 lock (logLock)
                 {
-                    AppendLog(i + " " + GetTimeStamp() + ": " + "ERROR: " + ex.Message + "\r\n");
+                    AppendLog(i + "/" + r + " " + GetTimeStamp() + ": " + ex.Message + "\r\n");
                 }
             }
         }
@@ -110,11 +132,11 @@ namespace AKSTest // Note: actual namespace depends on the project name.
         {
             return DateTime.Now.ToString("MM/dd/yy hh:mm:ss.fffffff tt");
         }
-        static async void AppendLog(string msg)
+        static void AppendLog(string msg)
         {
             try
             {
-                await System.IO.File.AppendAllTextAsync(logFilePath, msg);
+                 System.IO.File.AppendAllTextAsync(logFilePath, msg);
             }
             catch (Exception ex)
             {
