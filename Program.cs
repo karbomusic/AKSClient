@@ -11,7 +11,7 @@ namespace AKSTest // Note: actual namespace depends on the project name.
         static int numTests = 100;
         static int delay = 1000;
         static String logFilePath = "AKSTestLog-" + DateTime.Now.Ticks + ".log";
-        static object logLock = new object();
+        private static readonly object logLock = new object();
         static bool useLegacyThreading = true;
 
         static void Main(string[] args)
@@ -41,11 +41,11 @@ namespace AKSTest // Note: actual namespace depends on the project name.
             Console.ForegroundColor = ConsoleColor.Gray;
             if (useLegacyThreading)
             {
-                RunConnectivityTest2(testURL, numTests, delay * 1000);
+                RunConnectivityTest2(testURL, numTests, delay * 1000); // thread.start()
             }
             else
             {
-                RunConnectivityTest(testURL, numTests, delay * 1000);
+                RunConnectivityTest(testURL, numTests, delay * 1000); // async await
             }
 
             Console.ReadKey();
@@ -63,10 +63,7 @@ namespace AKSTest // Note: actual namespace depends on the project name.
                         client = new HttpClient();
                         var result = await client.GetAsync(URL);
                         Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, DateTime.Now.ToString("MM/dd/yy hh:mm:ss.fffffff tt"), result.StatusCode);
-                        lock (logLock)
-                        {
-                            AppendLog(i + " " + DateTime.Now.ToLongTimeString() + ": " + result.StatusCode + "\r\n");
-                        }
+                        AppendLog(i + " " + DateTime.Now.ToLongTimeString() + ": " + result.StatusCode + "\r\n");
                         if (client != null)
                         {
                             client.Dispose();
@@ -75,10 +72,7 @@ namespace AKSTest // Note: actual namespace depends on the project name.
                     catch (Exception ex)
                     {
                         Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, DateTime.Now.ToString("MM/dd/yy hh: mm:ss.fffffff tt"), "ERROR: " + ex.Message);
-                        lock (logLock)
-                        {
-                            AppendLog(i + " " + DateTime.Now.ToString("MM/dd/yy hh:mm:ss.fffffff tt") + ": " + "ERROR: " + ex.Message + "\r\n");
-                        }
+                        AppendLog(i + " " + DateTime.Now.ToString("MM/dd/yy hh:mm:ss.fffffff tt") + ": " + "ERROR: " + ex.Message + "\r\n");
                     }
 
                     System.Threading.Thread.Sleep(200);
@@ -109,22 +103,22 @@ namespace AKSTest // Note: actual namespace depends on the project name.
                 client = new HttpClient();
                 var result = client.GetAsync(URL);
                 Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, GetTimeStamp(), result.Result.StatusCode);
-                lock (logLock)
-                {
-                    AppendLog(i + "/" + r + " " + GetTimeStamp() + ": " + result.Result.StatusCode + "\r\n");
-                }
-                if (client != null)
-                {
-                    client.Dispose();
-                }
+                AppendLog(i + "/" + r + " " + GetTimeStamp() + ": " + result.Result.StatusCode + "\r\n");
+
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, GetTimeStamp(), "ERROR: " + ex.Message);
-                lock (logLock)
+                string message = String.Empty;
+                if(ex.InnerException != null && ex.InnerException.HResult == -2147467259)
                 {
-                    AppendLog(i + "/" + r + " " + GetTimeStamp() + ": " + ex.Message + "\r\n");
+                    message = "Repro? --> " + ex.InnerException.Message;
                 }
+                else
+                {
+                    message = ex.Message;
+                }
+                Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, GetTimeStamp(), "ERROR: " + message);
+                AppendLog(i + "/" + r + " " + GetTimeStamp() + ": " + message + "\r\n");
             }
         }
 
@@ -134,15 +128,21 @@ namespace AKSTest // Note: actual namespace depends on the project name.
         }
         static void AppendLog(string msg)
         {
-            try
+            lock (logLock)
             {
-                 System.IO.File.AppendAllTextAsync(logFilePath, msg);
-            }
-            catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Error writing to log {0} \r\n {1}", logFilePath, ex.Message);
-                Console.ForegroundColor = ConsoleColor.Gray;
+                try
+                {
+                    StreamWriter SW;
+                    SW = File.AppendText(logFilePath);
+                    SW.WriteLine(msg);
+                    SW.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Error writing to log {0} \r\n {1}", logFilePath, ex.Message);
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                }
             }
         }
 
