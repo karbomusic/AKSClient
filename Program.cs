@@ -38,6 +38,7 @@ namespace AKSTest // Note: actual namespace depends on the project name.
 
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("\r\nStarting test: URL{0}\r\nPassess={1}\r\nTotal Requests={2}\r\nDelay={3}", testURL, numTests, numTests * numTests, delay);
+            Console.WriteLine("Log file={0}", logFilePath);
             Console.ForegroundColor = ConsoleColor.Gray;
             if (useLegacyThreading)
             {
