@@ -38,6 +38,7 @@ namespace AKSTest // Note: actual namespace depends on the project name.
 
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("\r\nStarting test: URL{0}\r\nPassess={1}\r\nTotal Requests={2}\r\nDelay={3}", testURL, numTests, numTests * numTests, delay);
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Log file={0}", logFilePath);
             Console.ForegroundColor = ConsoleColor.Gray;
             if (useLegacyThreading)
@@ -105,7 +106,6 @@ namespace AKSTest // Note: actual namespace depends on the project name.
                 var result = client.GetAsync(URL);
                 Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, GetTimeStamp(), result.Result.StatusCode);
                 AppendLog(i + "/" + r + " " + GetTimeStamp() + ": " + result.Result.StatusCode + "\r\n");
-
             }
             catch (Exception ex)
             {
