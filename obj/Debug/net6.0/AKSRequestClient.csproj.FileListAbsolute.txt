@@ -13,3 +13,18 @@ C:\Users\User\source\repos\AKSRequestClient\obj\Debug\net6.0\AKSRequestClient.dl
 C:\Users\User\source\repos\AKSRequestClient\obj\Debug\net6.0\ref\AKSRequestClient.dll
 C:\Users\User\source\repos\AKSRequestClient\obj\Debug\net6.0\AKSRequestClient.pdb
 C:\Users\User\source\repos\AKSRequestClient\obj\Debug\net6.0\AKSRequestClient.genruntimeconfig.cache
+E:\DEV\Other Projects\AKSClient\bin\Debug\net6.0\AKSRequestClient.exe
+E:\DEV\Other Projects\AKSClient\bin\Debug\net6.0\AKSRequestClient.deps.json
+E:\DEV\Other Projects\AKSClient\bin\Debug\net6.0\AKSRequestClient.runtimeconfig.json
+E:\DEV\Other Projects\AKSClient\bin\Debug\net6.0\AKSRequestClient.dll
+E:\DEV\Other Projects\AKSClient\bin\Debug\net6.0\ref\AKSRequestClient.dll
+E:\DEV\Other Projects\AKSClient\bin\Debug\net6.0\AKSRequestClient.pdb
+E:\DEV\Other Projects\AKSClient\obj\Debug\net6.0\AKSRequestClient.csproj.AssemblyReference.cache
+E:\DEV\Other Projects\AKSClient\obj\Debug\net6.0\AKSRequestClient.GeneratedMSBuildEditorConfig.editorconfig
+E:\DEV\Other Projects\AKSClient\obj\Debug\net6.0\AKSRequestClient.AssemblyInfoInputs.cache
+E:\DEV\Other Projects\AKSClient\obj\Debug\net6.0\AKSRequestClient.AssemblyInfo.cs
+E:\DEV\Other Projects\AKSClient\obj\Debug\net6.0\AKSRequestClient.csproj.CoreCompileInputs.cache
+E:\DEV\Other Projects\AKSClient\obj\Debug\net6.0\AKSRequestClient.dll
+E:\DEV\Other Projects\AKSClient\obj\Debug\net6.0\ref\AKSRequestClient.dll
+E:\DEV\Other Projects\AKSClient\obj\Debug\net6.0\AKSRequestClient.pdb
+E:\DEV\Other Projects\AKSClient\obj\Debug\net6.0\AKSRequestClient.genruntimeconfig.cache

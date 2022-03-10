@@ -2,7 +2,7 @@
   "profiles": {
     "AKSRequestClient": {
       "commandName": "Project",
-      "commandLineArgs": "http://localhost:5000/main?delay=1 100 1"
+      "commandLineArgs": "http://localhost:5000/main 100 10"
     }
   }
 }

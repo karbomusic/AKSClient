@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "rLOb4Wb/2X7neeL6W7CIxf4RyAgET+M/CzBViVD7KP3GuOv1A5V3Xdk0a/9sKcyU2ceie3rByicQPEKB4c0xjg==",
+  "success": true,
+  "projectFilePath": "E:\\DEV\\Other Projects\\AKSClient\\AKSRequestClient.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Kary\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\6.0.0\\microsoft.netcore.app.runtime.win-x64.6.0.0.nupkg.sha512",
+    "C:\\Users\\Kary\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\6.0.0\\microsoft.windowsdesktop.app.runtime.win-x64.6.0.0.nupkg.sha512",
+    "C:\\Users\\Kary\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\6.0.0\\microsoft.aspnetcore.app.runtime.win-x64.6.0.0.nupkg.sha512",
+    "C:\\Users\\Kary\\.nuget\\packages\\microsoft.netcore.app.crossgen2.win-x64\\6.0.0\\microsoft.netcore.app.crossgen2.win-x64.6.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
