@@ -13,6 +13,7 @@ namespace AKSTest // Note: actual namespace depends on the project name.
         static String logFilePath = "AKSTestLog-" + DateTime.Now.Ticks + ".log";
         private static readonly object logLock = new object();
         static bool useLegacyThreading = true;
+        static bool disableKeepAlive = false;
 
         static void Main(string[] args)
         {
@@ -28,6 +29,15 @@ namespace AKSTest // Note: actual namespace depends on the project name.
                     if (args[3] == "0")
                     {
                        useLegacyThreading = false;
+                    }
+                    else if(args[3] == "1")
+                    {
+                        useLegacyThreading = true;
+                    }
+                    else if(args[3] == "2")
+                    {
+                        useLegacyThreading = true;
+                        disableKeepAlive = true;
                     }
                 }
             }
@@ -90,14 +100,24 @@ namespace AKSTest // Note: actual namespace depends on the project name.
             {
                 for (int r = 0; r < numPasses; r++)
                 {
-                    Thread t = new Thread(() => MakeRequest(URL, numPasses, waitDelay, i, r));
-                    t.Start();
-                    System.Threading.Thread.Sleep(50);
+                    if (disableKeepAlive)
+                    {
+                        Thread t = new Thread(() => MakeRequest2(URL, numPasses, waitDelay, i, r));
+                        t.Start();
+                        System.Threading.Thread.Sleep(50);
+                    }
+                    else
+                    {
+                        Thread t = new Thread(() => MakeRequest(URL, numPasses, waitDelay, i, r));
+                        t.Start();
+                        System.Threading.Thread.Sleep(50);
+                    }
                 }
                 System.Threading.Thread.Sleep(waitDelay);
             }
         }
 
+        // uses keep-alive
         static void MakeRequest(string URL, int numPasses, int waitDelay, int i, int r)
         {
             try
@@ -123,6 +143,33 @@ namespace AKSTest // Note: actual namespace depends on the project name.
             }
         }
 
+        // disables keep-alive
+        static void MakeRequest2(string URL, int numPasses, int waitDelay, int i, int r)
+        {
+            try
+            {
+                HttpWebRequest client = (HttpWebRequest)WebRequest.Create(URL);
+                client.KeepAlive = false;
+                HttpWebResponse response = (HttpWebResponse)client.GetResponse();
+                Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, GetTimeStamp(), response.StatusDescription);
+                AppendLog(i + "/" + r + " " + GetTimeStamp() + ": " + response.StatusDescription + "\r\n");
+            }
+            catch (Exception ex)
+            {
+                string message = String.Empty;
+                if (ex.InnerException != null && ex.InnerException.HResult == -2147467259)
+                {
+                    message = "Repro? --> " + ex.InnerException.Message;
+                }
+                else
+                {
+                    message = ex.Message;
+                }
+                Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, GetTimeStamp(), "ERROR: " + message);
+                AppendLog(i + "/" + r + " " + GetTimeStamp() + ": " + message + "\r\n");
+            }
+
+        }
         static String GetTimeStamp()
         {
             return DateTime.Now.ToString("MM/dd/yy hh:mm:ss.fffffff tt");
