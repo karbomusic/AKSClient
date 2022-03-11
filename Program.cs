@@ -44,7 +44,7 @@ namespace AKSTest
             else
             {
                 Console.WriteLine("Not enough arguments!");
-                Console.WriteLine("Usage: AKSClientTest.exe <URL> <NumRequests> <DelayBetweenRequests> <DelayBetweenBlocks>");
+                Console.WriteLine("Usage: AKSClientTest.exe <URL> <NumRequests> <DelayBetweenBlocks> <DelayBetweenRequests>");
                 Console.ReadKey();
                 Environment.Exit(0);    
             }
