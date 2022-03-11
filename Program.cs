@@ -5,24 +5,23 @@ using System.Net.Http;
 /// <summary>
 /// This app functions as a web client that an send multiple asynchronus requests to a remote enpoint.
 /// It uses a nested loop to send blocks of spewed requests.
-/// Usage: AKSClientTest.exe <URL> <NumRequests> <DelayBetweenRequests> <DelayBetweenBlocks>
+/// Usage: AKSClientTest.exe <URL> <NumRequests> <DelayBetweenBlocks> <DelayBetweenRequests> 
 ///  
 /// URL: The remote endpoint. If using the sister server app ?delay= will tell the endpoint to hold
 /// the request for a random number of seconds between 0 and the delay value.
 /// 
-/// NumRequests: Number of requests * number of requests. So 10 = 10x10 or 100 requests total.
+/// NumRequests: Number of requests * number of requests. So 10 = 10 blocks of 10 or 100 requests total.
 /// 
 /// DelayBetweenRequests: The micro delay between every request.
 /// 
-/// DelayBetweenBlocks: This is how long to pause per block of requues so if NumRequests = 10 and DelayBetwenBLocks = 1
-///                     then there will be a 1 second pause ever 10 requests.
+/// DelayBetweenBlocks: This is how long to pause per block of requests so if NumRequests = 10 and DelayBetwenBLocks = 1
+///                     then there will be a 1 second pause every 10 requests.
 ///                
 /// </summary>
 namespace AKSTest 
 {
     internal class Program
     {
-        static HttpClient? client;
         static String testURL = String.Empty;
         static int numTests = 100;
         static int delay = 1000;
@@ -30,7 +29,6 @@ namespace AKSTest
         static String logFilePath = "AKSClientTestLog-" + DateTime.Now.Ticks + ".log";
         private static readonly object logLock = new object();
         private static readonly object rndLock = new object();
- 
 
         static void Main(string[] args)
         {
@@ -46,7 +44,7 @@ namespace AKSTest
             else
             {
                 Console.WriteLine("Not enough arguments!");
-                Console.WriteLine("Usage: AKSClientTest.exe <URL> <NumRequests> <DelayBetweenRequests> <DelayBetweenBlocks>");
+                Console.WriteLine("Usage: AKSClientTest.exe <URL> <NumRequests> <DelayBetweenBlocks> <DelayBetweenRequests>");
                 Console.ReadKey();
                 Environment.Exit(0);    
             }
@@ -77,19 +75,15 @@ namespace AKSTest
             Console.WriteLine("\r\nTest Completed.");
         }
 
+        // The actual request happens here.
         static void MakeRequest(string URL, int numPasses, int waitDelay, int i, int r)
         {
             string requestID = String.Empty;
+            requestID = GetRandomHexString();
 
-            if (URL.Contains("?delay="))
-            {
-                requestID = GetRandomHexString();
-                URL += "&reqid=" + requestID;
-            }
-            else
-            {
-                throw (new Exception("No URL"));
-            }
+            // were forcing all args at this point so this check isn't really needed.
+            // but appending the reqid is needed.
+            URL = URL.Contains("?delay=") ? URL += "&reqid=" + requestID : URL += "?reqid=" + requestID;
 
             try
             {
@@ -104,10 +98,13 @@ namespace AKSTest
                 string message = String.Empty;
                 if (ex.InnerException != null && ex.InnerException.HResult == -2147467259)
                 {
+                    // the connection timed out or similar which is the same as the repro.
+                    // we can't be 100% sure this isn't a false positive though.
                     message = "Repro? --> " + ex.InnerException.Message;
                 }
                 else
                 {
+                    // non-repro failed request
                     message = ex.Message;
                 }
                 Console.WriteLine("Passes:{0}/{1} - {2}: {3} {4}", i, r, GetTimeStamp(), requestID, "ERROR: " + message);
