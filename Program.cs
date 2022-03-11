@@ -2,7 +2,23 @@
 using System.Net;
 using System.Net.Http;
 
-namespace AKSTest // Note: actual namespace depends on the project name.
+/// <summary>
+/// This app functions as a web client that an send multiple asynchronus requests to a remote enpoint.
+/// It uses a nested loop to send blocks of spewed requests.
+/// Usage: AKSClientTest.exe <URL> <NumRequests> <DelayBetweenRequests> <DelayBetweenBlocks>
+///  
+/// URL: The remote endpoint. If using the sister server app ?delay= will tell the endpoint to hold
+/// the request for a random number of seconds between 0 and the delay value.
+/// 
+/// NumRequests: Number of requests * number of requests. So 10 = 10x10 or 100 requests total.
+/// 
+/// DelayBetweenRequests: The micro delay between every request.
+/// 
+/// DelayBetweenBlocks: This is how long to pause per block of requues so if NumRequests = 10 and DelayBetwenBLocks = 1
+///                     then there will be a 1 second pause ever 10 requests.
+///                
+/// </summary>
+namespace AKSTest 
 {
     internal class Program
     {
@@ -10,149 +26,78 @@ namespace AKSTest // Note: actual namespace depends on the project name.
         static String testURL = String.Empty;
         static int numTests = 100;
         static int delay = 1000;
-        static String logFilePath = "AKSTestLog-" + DateTime.Now.Ticks + ".log";
+        static int microDelay = 50;
+        static String logFilePath = "AKSClientTestLog-" + DateTime.Now.Ticks + ".log";
         private static readonly object logLock = new object();
-        static bool useLegacyThreading = true;
-        static bool disableKeepAlive = false;
+        private static readonly object rndLock = new object();
+ 
 
         static void Main(string[] args)
         {
             PrintBanner();
 
-            if (args.Count() > 0)
+            if (args.Count() > 3)
             {
                 testURL = args[0];
                 numTests = Convert.ToInt32(args[1]);
                 delay = Convert.ToInt32(args[2]);
-                if (args.Count() > 3)
-                {
-                    if (args[3] == "0")
-                    {
-                       useLegacyThreading = false;
-                    }
-                    else if(args[3] == "1")
-                    {
-                        useLegacyThreading = true;
-                    }
-                    else if(args[3] == "2")
-                    {
-                        useLegacyThreading = true;
-                        disableKeepAlive = true;
-                    }
-                }
+                microDelay = Convert.ToInt32(args[3]);
             }
             else
             {
-                testURL = "https://bing.com";
+                Console.WriteLine("Not enough arguments!");
+                Console.WriteLine("Usage: AKSClientTest.exe <URL> <NumRequests> <DelayBetweenRequests> <DelayBetweenBlocks>");
+                Console.ReadKey();
+                Environment.Exit(0);    
             }
-
+            
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("\r\nStarting test: URL{0}\r\nPassess={1}\r\nTotal Requests={2}\r\nDelay={3}", testURL, numTests, numTests * numTests, delay);
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Log file={0}", logFilePath);
             Console.ForegroundColor = ConsoleColor.Gray;
-            if (useLegacyThreading)
-            {
-                RunConnectivityTest2(testURL, numTests, delay * 1000); // thread.start()
-            }
-            else
-            {
-                RunConnectivityTest(testURL, numTests, delay * 1000); // async await
-            }
 
+            RunConnectivityTest(testURL, numTests, delay * 1000); // thread.start()
             Console.ReadKey();
         }
 
         // Make i iterations of r requests so numPasses = 10 = 10 passes (i) of 10 request blocks (r) each = 100 requests
-        static async void RunConnectivityTest(string URL, int numPasses, int waitDelay)
+        static void RunConnectivityTest(string URL, int numPasses, int waitDelay)
         {
             for (int i = 0; i < numPasses; i++)
             {
                 for (int r = 0; r < numPasses; r++)
                 {
-                    try
-                    {
-                        client = new HttpClient();
-                        var result = await client.GetAsync(URL);
-                        Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, DateTime.Now.ToString("MM/dd/yy hh:mm:ss.fffffff tt"), result.StatusCode);
-                        AppendLog(i + " " + DateTime.Now.ToLongTimeString() + ": " + result.StatusCode + "\r\n");
-                        if (client != null)
-                        {
-                            client.Dispose();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, DateTime.Now.ToString("MM/dd/yy hh: mm:ss.fffffff tt"), "ERROR: " + ex.Message);
-                        AppendLog(i + " " + DateTime.Now.ToString("MM/dd/yy hh:mm:ss.fffffff tt") + ": " + "ERROR: " + ex.Message + "\r\n");
-                    }
-
-                    System.Threading.Thread.Sleep(200);
+                    Thread t = new Thread(() => MakeRequest(URL, numPasses, waitDelay, i, r));
+                    t.Start();
+                    System.Threading.Thread.Sleep(microDelay);
                 }
                 System.Threading.Thread.Sleep(waitDelay);
             }
+            Console.WriteLine("\r\nTest Completed.");
         }
 
-        // Make i iterations of r requests so numPasses = 10 = 10 passes (i) of 10 request blocks (r) each = 100 requests
-        static void RunConnectivityTest2(string URL, int numPasses, int waitDelay)
-        {
-            for (int i = 0; i < numPasses; i++)
-            {
-                for (int r = 0; r < numPasses; r++)
-                {
-                    if (disableKeepAlive)
-                    {
-                        Thread t = new Thread(() => MakeRequest2(URL, numPasses, waitDelay, i, r));
-                        t.Start();
-                        System.Threading.Thread.Sleep(50);
-                    }
-                    else
-                    {
-                        Thread t = new Thread(() => MakeRequest(URL, numPasses, waitDelay, i, r));
-                        t.Start();
-                        System.Threading.Thread.Sleep(50);
-                    }
-                }
-                System.Threading.Thread.Sleep(waitDelay);
-            }
-        }
-
-        // uses keep-alive
         static void MakeRequest(string URL, int numPasses, int waitDelay, int i, int r)
         {
-            try
-            {
-                client = new HttpClient();
-                var result = client.GetAsync(URL);
-                Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, GetTimeStamp(), result.Result.StatusCode);
-                AppendLog(i + "/" + r + " " + GetTimeStamp() + ": " + result.Result.StatusCode + "\r\n");
-            }
-            catch (Exception ex)
-            {
-                string message = String.Empty;
-                if(ex.InnerException != null && ex.InnerException.HResult == -2147467259)
-                {
-                    message = "Repro? --> " + ex.InnerException.Message;
-                }
-                else
-                {
-                    message = ex.Message;
-                }
-                Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, GetTimeStamp(), "ERROR: " + message);
-                AppendLog(i + "/" + r + " " + GetTimeStamp() + ": " + message + "\r\n");
-            }
-        }
+            string requestID = String.Empty;
 
-        // disables keep-alive
-        static void MakeRequest2(string URL, int numPasses, int waitDelay, int i, int r)
-        {
+            if (URL.Contains("?delay="))
+            {
+                requestID = GetRandomHexString();
+                URL += "&reqid=" + requestID;
+            }
+            else
+            {
+                throw (new Exception("No URL"));
+            }
+
             try
             {
                 HttpWebRequest client = (HttpWebRequest)WebRequest.Create(URL);
                 client.KeepAlive = false;
                 HttpWebResponse response = (HttpWebResponse)client.GetResponse();
-                Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, GetTimeStamp(), response.StatusDescription);
-                AppendLog(i + "/" + r + " " + GetTimeStamp() + ": " + response.StatusDescription + "\r\n");
+                Console.WriteLine("Passes:{0}/{1} - {2}: {3} {4}", i, r, GetTimeStamp(), requestID, response.StatusDescription);
+                AppendLog(i + "/" + r + " " + GetTimeStamp() + ": ReqID: " + requestID + "-" + response.StatusDescription + "\r\n");
             }
             catch (Exception ex)
             {
@@ -165,11 +110,12 @@ namespace AKSTest // Note: actual namespace depends on the project name.
                 {
                     message = ex.Message;
                 }
-                Console.WriteLine("Passes:{0}/{1} - {2}: {3}", i, r, GetTimeStamp(), "ERROR: " + message);
-                AppendLog(i + "/" + r + " " + GetTimeStamp() + ": " + message + "\r\n");
+                Console.WriteLine("Passes:{0}/{1} - {2}: {3} {4}", i, r, GetTimeStamp(), requestID, "ERROR: " + message);
+                AppendLog(i + "/" + r + " " + GetTimeStamp() + ": ReqID: " + requestID  + "-" + message + "\r\n");
             }
 
         }
+
         static String GetTimeStamp()
         {
             return DateTime.Now.ToString("MM/dd/yy hh:mm:ss.fffffff tt");
@@ -194,13 +140,21 @@ namespace AKSTest // Note: actual namespace depends on the project name.
             }
         }
 
+        static Random r = new Random();
+        static String GetRandomHexString()
+        {
+            lock (rndLock)
+            {
+                int A = r.Next(10000, 1500000);
+                return A.ToString("X");
+            }
+        }
+        
         static void PrintBanner()
         {
-            Console.WriteLine("====================================================================");
-            Console.WriteLine("            AKS Pod Test Client         \r\n");
-            Console.WriteLine("Usage: AKSRequestClient.exe [<URL> <NumRequets> <Delay>]            ");
-            Console.WriteLine("If all args are ommited, https://bing.com is used with 100 requests.");
-            Console.WriteLine("====================================================================");
+            Console.WriteLine("====================================================================    ");
+            Console.WriteLine("                     Web Request Test Client                            ");
+            Console.WriteLine("====================================================================\r\n");
         }
     }
 }
