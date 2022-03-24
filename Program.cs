@@ -88,7 +88,7 @@ namespace AKSTest
             try
             {
                 HttpWebRequest client = (HttpWebRequest)WebRequest.Create(URL);
-                client.KeepAlive = false;
+                client.KeepAlive = false; // required to simulate higher connection loads for repro!
                 HttpWebResponse response = (HttpWebResponse)client.GetResponse();
                 Console.WriteLine("Passes:{0}/{1} - {2}: {3} {4}", i, r, GetTimeStamp(), requestID, response.StatusDescription);
                 AppendLog(i + "/" + r + " " + GetTimeStamp() + ": ReqID: " + requestID + "-" + response.StatusDescription + "\r\n");
